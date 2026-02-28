@@ -1,0 +1,28 @@
+# --- General / System ---
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+
+# --- Dependencies ---
+# Covers both client/node_modules and server/node_modules
+node_modules/
+
+# --- Client (Expo / React Native / Web) ---
+client/.expo/
+client/dist/
+client/web-build/
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+
+# --- Server (Node.js / Prisma) ---
+server/dist/
+server/build/
+# Ignore generated Prisma client if you prefer to generate it on build
+# server/node_modules/.prisma/ 
+
+# --- Tools / Editors ---
+.vscode/
+.idea/
