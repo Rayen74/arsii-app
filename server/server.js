@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+const result = dotenv.config();
+if (result.error) {
+  console.error("❌ Dotenv Error:", result.error);
+} else {
+  console.log("✅ Successfully injected variables:", Object.keys(result.parsed));
+}
 import morgan from 'morgan';
 import authRoutes from './src/routes/authRoutes.js';
 import projectRoutes from './src/routes/projectRoutes.js';
@@ -10,7 +16,7 @@ import teamRoutes from './src/routes/teamRoutes.js';
 
 
 
-dotenv.config();
+
 
 const app = express();
 
@@ -47,6 +53,8 @@ app.use((err, req, res, next) => {
 // PORT Logic: Ensure this matches your .env or defaults to 5000
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+
+// Change 'localhost' to '0.0.0.0' to accept external connections
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server is running and reachable at http://0.0.0.0:${PORT}`);
 });
