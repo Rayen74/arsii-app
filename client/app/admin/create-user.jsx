@@ -9,6 +9,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,8 +17,16 @@ import * as Animatable from 'react-native-animatable';
 import { useRouter } from 'expo-router';
 import axios from 'axios';
 
-// Get the API URL from your .env file (EXPO_PUBLIC_API_URL=http://10.10.120.58:3000/api)
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+// Consistent ARSII Color Palette
+const COLORS = {
+  primary: '#1e3a8a',    // Deep Navy
+  secondary: '#22c55e',  // Success Green
+  bgLight: '#f8fafc',    // Slate-50
+  border: '#e2e8f0',     // Slate-200
+  textMuted: '#94a3b8'   // Slate-400
+};
 
 export default function CreateUser() {
   const router = useRouter();
@@ -60,7 +69,6 @@ export default function CreateUser() {
     setUi({ ...ui, isLoading: true });
 
     try {
-      // Logic Check: Axios will automatically handle the JSON conversion
       const response = await axios.post(`${API_URL}/auth/register`, {
         name: form.name,
         email: form.email,
@@ -73,22 +81,16 @@ export default function CreateUser() {
           ...ui,
           isLoading: false,
           isSuccess: true,
-          modalMessage: 'User created successfully! Proceeding to login.',
+          modalMessage: 'User created successfully! The member can now log in.',
           modalVisible: true,
         });
         setForm({ name: '', email: '', role: 'USER', password: '', confirmPassword: '' });
       }
     } catch (error) {
-      let errorMessage = 'Network error: Check if backend is running on ' + API_URL;
-      
+      let errorMessage = 'Network error: Check if backend is running.';
       if (error.response) {
-        // Server responded with an error (400, 401, 500)
         errorMessage = error.response.data.message || 'Registration failed.';
-      } else if (error.request) {
-        // Request was made but no response received (likely IP/Firewall issue)
-        errorMessage = 'Server unreachable. Verify your computer IP: ' + API_URL;
       }
-
       setUi({
         ...ui,
         isLoading: false,
@@ -102,65 +104,74 @@ export default function CreateUser() {
   const closeModal = () => {
     setUi({ ...ui, modalVisible: false });
     if (ui.isSuccess) {
-      router.replace('/auth/login');
+      router.replace('/admin/menu'); // Logical flow: Back to Admin menu on success
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: COLORS.bgLight }}>
+      <StatusBar barStyle="dark-content" />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         className="flex-1"
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-          <View className="justify-center flex-1 p-6">
-            <Animatable.View animation="fadeInUp" duration={800} className="p-8 bg-white border border-gray-100 shadow-xl rounded-3xl">
-              <View className="items-center mb-8">
-                <View className="p-4 mb-4 bg-blue-100 rounded-full">
-                  <MaterialIcons name="person-add" size={40} color="#2563eb" />
-                </View>
-                <Text className="text-3xl font-bold text-gray-900">ARSII-Sfax</Text>
-                <Text className="mt-1 text-gray-500">Create a new team member</Text>
-              </View>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+          <View className="p-6">
+            
+            {/* Header Section */}
+            <Pressable onPress={() => router.back()} className="items-center justify-center w-10 h-10 mb-6 bg-white rounded-full shadow-sm">
+              <MaterialIcons name="arrow-back" size={24} color={COLORS.primary} />
+            </Pressable>
 
+            <View className="mb-8">
+              <View className="flex-row items-center mb-1">
+                <View className="w-8 h-1 mr-2 bg-green-500 rounded-full" />
+                <Text className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Management</Text>
+              </View>
+              <Text className="text-3xl font-black text-blue-900">Add Member</Text>
+              <Text className="font-medium text-slate-400">Provision a new account for the association</Text>
+            </View>
+
+            <Animatable.View animation="fadeInUp" duration={600} className="p-8 bg-white shadow-2xl shadow-slate-200 rounded-[35px] border border-slate-50">
+              
               {/* Input Fields */}
               <InputField icon="person" placeholder="Full Name" value={form.name} onChange={(v) => setForm({...form, name: v})} />
-              <InputField icon="email" placeholder="Email" value={form.email} onChange={(v) => setForm({...form, email: v})} keyboard="email-address" />
+              <InputField icon="email" placeholder="Email Address" value={form.email} onChange={(v) => setForm({...form, email: v})} keyboard="email-address" />
 
               {/* Custom Role Dropdown */}
               <View className="relative z-50 mb-4">
                 <Pressable 
                   onPress={() => setUi({...ui, showDropdown: !ui.showDropdown})}
-                  className="flex-row items-center justify-between p-4 border border-gray-200 bg-gray-50 rounded-xl"
+                  className="flex-row items-center justify-between p-4 border bg-slate-50 border-slate-100 rounded-2xl"
                 >
                   <View className="flex-row items-center">
-                    <MaterialIcons name="admin-panel-settings" size={20} color="#6b7280" />
-                    <Text className="ml-3 font-medium text-gray-700">{form.role}</Text>
+                    <MaterialIcons name="verified-user" size={20} color={COLORS.primary} />
+                    <Text className="ml-3 font-bold text-slate-700">{form.role}</Text>
                   </View>
-                  <MaterialIcons name="arrow-drop-down" size={24} color="#6b7280" />
+                  <MaterialIcons name={ui.showDropdown ? "expand-less" : "expand-more"} size={24} color={COLORS.textMuted} />
                 </Pressable>
                 
                 {ui.showDropdown && (
-                  <View className="absolute left-0 right-0 overflow-hidden bg-white border border-gray-200 shadow-lg top-14 rounded-xl">
+                  <Animatable.View animation="fadeIn" duration={200} className="absolute left-0 right-0 overflow-hidden bg-white border border-slate-100 shadow-2xl top-14 rounded-2xl z-[100]">
                     {roles.map((r) => (
                       <Pressable 
                         key={r} 
-                        className="p-4 border-b border-gray-50 active:bg-blue-50"
+                        className={`p-4 border-b border-slate-50 ${form.role === r ? 'bg-blue-50' : 'active:bg-slate-50'}`}
                         onPress={() => {
                           setForm({...form, role: r});
                           setUi({...ui, showDropdown: false});
                         }}
                       >
-                        <Text className={form.role === r ? "text-blue-600 font-bold" : "text-gray-700"}>{r}</Text>
+                        <Text className={form.role === r ? "text-blue-900 font-black" : "text-slate-600 font-medium"}>{r}</Text>
                       </Pressable>
                     ))}
-                  </View>
+                  </Animatable.View>
                 )}
               </View>
 
               <InputField 
                 icon="lock" 
-                placeholder="Password" 
+                placeholder="Secure Password" 
                 value={form.password} 
                 onChange={(v) => setForm({...form, password: v})} 
                 isPassword 
@@ -169,7 +180,7 @@ export default function CreateUser() {
               />
 
               <InputField 
-                icon="verified-user" 
+                icon="shield" 
                 placeholder="Confirm Password" 
                 value={form.confirmPassword} 
                 onChange={(v) => setForm({...form, confirmPassword: v})} 
@@ -181,35 +192,42 @@ export default function CreateUser() {
               <Pressable 
                 onPress={handleRegister}
                 disabled={ui.isLoading}
-                className={`mt-4 p-4 rounded-xl items-center shadow-lg ${ui.isLoading ? 'bg-blue-300' : 'bg-blue-600'}`}
+                className={`mt-6 p-5 rounded-2xl flex-row justify-center items-center shadow-lg shadow-blue-200 ${ui.isLoading ? 'bg-blue-300' : 'bg-blue-900'}`}
               >
-                {ui.isLoading ? <ActivityIndicator color="#fff" /> : <Text className="text-lg font-bold text-white">Register Member</Text>}
-              </Pressable>
-
-              <Pressable onPress={() => router.push('/auth/login')} className="mt-6">
-                <Text className="text-center text-gray-500">Already registered? <Text className="font-bold text-blue-600">Log In</Text></Text>
+                {ui.isLoading ? <ActivityIndicator color="#fff" /> : (
+                  <>
+                    <MaterialIcons name="person-add" size={20} color="white" />
+                    <Text className="ml-2 text-lg font-bold text-white">Create Account</Text>
+                  </>
+                )}
               </Pressable>
             </Animatable.View>
+
+            <View className="items-center mt-10">
+               <Text className="text-slate-300 text-[10px] font-bold tracking-widest uppercase italic">Secure Member Provisioning</Text>
+            </View>
           </View>
         </ScrollView>
 
-        {/* Feedback Modal */}
+        {/* Feedback Modal Sync with Login.jsx */}
         <Modal visible={ui.modalVisible} transparent animationType="fade">
-          <View className="items-center justify-center flex-1 p-6 bg-black/60">
-            <View className="items-center w-full max-w-sm p-8 bg-white shadow-2xl rounded-3xl">
-              <MaterialIcons 
-                name={ui.isSuccess ? "check-circle" : "error-outline"} 
-                size={64} 
-                color={ui.isSuccess ? "#10b981" : "#ef4444"} 
-              />
-              <Text className="mt-4 mb-2 text-xl font-bold text-center text-gray-900">
-                {ui.isSuccess ? "Success" : "Oops!"}
+          <View className="items-center justify-center flex-1 p-6 bg-slate-900/60">
+            <View className="items-center w-full max-w-sm p-8 bg-white shadow-2xl rounded-[35px]">
+              <Animatable.View animation="zoomIn">
+                <MaterialIcons 
+                  name={ui.isSuccess ? "check-circle" : "error"} 
+                  size={70} 
+                  color={ui.isSuccess ? COLORS.secondary : "#ef4444"} 
+                />
+              </Animatable.View>
+              <Text className="mt-4 mb-2 text-2xl font-black text-slate-800">
+                {ui.isSuccess ? "Success" : "Error"}
               </Text>
-              <Text className="mb-6 leading-5 text-center text-gray-500">
+              <Text className="mb-8 font-medium leading-5 text-center text-slate-500">
                 {ui.modalMessage}
               </Text>
-              <Pressable onPress={closeModal} className="w-full p-4 bg-gray-900 rounded-xl">
-                <Text className="font-bold text-center text-white">OK</Text>
+              <Pressable onPress={closeModal} className={`w-full p-4 rounded-2xl ${ui.isSuccess ? 'bg-green-600' : 'bg-blue-900'}`}>
+                <Text className="text-lg font-bold text-center text-white">Continue</Text>
               </Pressable>
             </View>
           </View>
@@ -219,14 +237,13 @@ export default function CreateUser() {
   );
 }
 
-// Reusable Input Component for cleaner code
 const InputField = ({ icon, placeholder, value, onChange, keyboard = "default", isPassword = false, showPassword = false, toggleShow }) => (
-  <View className="flex-row items-center p-4 mb-4 border border-gray-200 bg-gray-50 rounded-xl">
-    <MaterialIcons name={icon} size={20} color="#6b7280" />
+  <View className="flex-row items-center p-4 mb-4 border bg-slate-50 border-slate-100 rounded-2xl">
+    <MaterialIcons name={icon} size={20} color="#1e3a8a" />
     <TextInput
-      className="flex-1 ml-3 text-gray-700"
+      className="flex-1 ml-3 font-medium text-slate-700"
       placeholder={placeholder}
-      placeholderTextColor="#9ca3af"
+      placeholderTextColor="#94a3b8"
       value={value}
       onChangeText={onChange}
       keyboardType={keyboard}
@@ -234,8 +251,8 @@ const InputField = ({ icon, placeholder, value, onChange, keyboard = "default", 
       autoCapitalize="none"
     />
     {isPassword && (
-      <Pressable onPress={toggleShow}>
-        <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#6b7280" />
+      <Pressable onPress={toggleShow} className="px-2">
+        <MaterialIcons name={showPassword ? "visibility" : "visibility-off"} size={20} color="#64748b" />
       </Pressable>
     )}
   </View>
